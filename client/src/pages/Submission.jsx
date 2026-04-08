@@ -28,18 +28,18 @@ const Submission = () => {
   const [progress, setProgress] = useState(0)
   const [loading, setLoading] = useState(false)
 
+  const [showTerms, setShowTerms] = useState(false)
+  const [agreed, setAgreed] = useState(false)
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  // 🔥 IMAGE SELECT
   const handleImage = (e, name) => {
     const file = e.target.files[0]
 
     if (file) {
-      if (preview[name]) {
-        URL.revokeObjectURL(preview[name])
-      }
+      if (preview[name]) URL.revokeObjectURL(preview[name])
 
       setImages((prev) => ({ ...prev, [name]: file }))
       setPreview((prev) => ({
@@ -53,15 +53,12 @@ const Submission = () => {
     e.target.value = null
   }
 
-  // 🔥 DRAG DROP
   const handleDrop = (e, name) => {
     e.preventDefault()
     const file = e.dataTransfer.files[0]
 
     if (file) {
-      if (preview[name]) {
-        URL.revokeObjectURL(preview[name])
-      }
+      if (preview[name]) URL.revokeObjectURL(preview[name])
 
       setImages((prev) => ({ ...prev, [name]: file }))
       setPreview((prev) => ({
@@ -73,11 +70,8 @@ const Submission = () => {
     }
   }
 
-  // 🔥 REMOVE IMAGE
   const removeImage = (name) => {
-    if (preview[name]) {
-      URL.revokeObjectURL(preview[name])
-    }
+    if (preview[name]) URL.revokeObjectURL(preview[name])
 
     setImages((prev) => ({ ...prev, [name]: null }))
     setPreview((prev) => ({ ...prev, [name]: null }))
@@ -85,11 +79,9 @@ const Submission = () => {
     toast("Image removed ❌")
   }
 
-  // 🔥 SUBMIT WITH VALIDATION
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    if (e?.preventDefault) e.preventDefault()
 
-    // ✅ REQUIRED FIELD VALIDATION
     const requiredFields = [
       "name",
       "age",
@@ -106,7 +98,6 @@ const Submission = () => {
       }
     }
 
-    // ✅ IMAGE VALIDATION
     const requiredImages = ["front", "back", "left", "right"]
 
     for (let img of requiredImages) {
@@ -125,10 +116,10 @@ const Submission = () => {
       })
 
       Object.keys(images).forEach((key) => {
-        if (images[key]) {
-          form.append(key, images[key])
-        }
+        if (images[key]) form.append(key, images[key])
       })
+
+      form.append("agreedToTerms", true)
 
       const xhr = new XMLHttpRequest()
       xhr.open("POST", "http://localhost:5000/api/submission")
@@ -169,6 +160,7 @@ const Submission = () => {
         })
 
         setPreview({})
+        setAgreed(false)
       }
 
       xhr.onerror = () => {
@@ -191,7 +183,7 @@ const Submission = () => {
         Model Submission Form
       </h1>
 
-      <form onSubmit={handleSubmit} className="max-w-4xl mx-auto space-y-6">
+      <form className="max-w-4xl mx-auto space-y-6">
 
         {/* INPUTS */}
         <div className="grid md:grid-cols-2 gap-4">
@@ -215,9 +207,11 @@ const Submission = () => {
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleDrop(e, pos)}
               className={`border-2 rounded-lg p-4 text-center transition relative cursor-pointer
-              ${preview[pos] ? "border-green-500 bg-green-500/10" : "border-gray-600 hover:border-white"}`}
+              ${preview[pos]
+                ? "border-green-500 bg-green-500/10"
+                : "border-gray-600 hover:border-white"
+              }`}
             >
-
               {preview[pos] && (
                 <button
                   type="button"
@@ -250,12 +244,10 @@ const Submission = () => {
 
               <input
                 type="file"
-                name={pos}
                 accept="image/*"
                 onChange={(e) => handleImage(e, pos)}
                 className="hidden"
               />
-
             </label>
           ))}
         </div>
@@ -266,20 +258,130 @@ const Submission = () => {
             <div
               className="bg-green-500 h-2 rounded transition-all"
               style={{ width: `${progress}%` }}
-            ></div>
+            />
           </div>
         )}
 
-        {/* BUTTON */}
+        {/* SUBMIT BUTTON */}
         <button
-          type="submit"
+          type="button"
+          onClick={() => setShowTerms(true)}
           disabled={loading}
-          className="w-full border border-white py-3 rounded hover:bg-white hover:text-black disabled:opacity-50"
+          className="w-full border border-white py-3 rounded hover:bg-white hover:text-black"
         >
           {loading ? "Uploading..." : "Submit"}
         </button>
 
       </form>
+
+      {/* TERMS MODAL */}
+{showTerms && (
+  <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4">
+    <div className="bg-white text-black max-w-4xl w-full rounded-xl p-6 max-h-[85vh] overflow-y-auto">
+
+      <h2 className="text-2xl font-semibold mb-4">
+        Terms & Conditions
+      </h2>
+
+      <div className="space-y-4 text-sm text-gray-700 leading-relaxed">
+
+        <p><b>1. Eligibility</b><br />
+        Applicants must be at least 16 years old.<br />
+        If under 18, parent/guardian consent is mandatory.
+        </p>
+
+        <p><b>2. Authentic Information</b><br />
+        All information submitted must be true and accurate.<br />
+        Any false details may result in immediate rejection or termination.
+        </p>
+
+        <p><b>3. No Guarantee of Selection</b><br />
+        Submission does not guarantee selection, contracts, or assignments.<br />
+        The agency reserves full rights to accept or reject applications.
+        </p>
+
+        <p><b>4. Image Usage Rights</b><br />
+        By submitting photos, you grant the agency permission to:
+        <br />• Review your profile
+        <br />• Use images for internal selection or promotional purposes (if selected)
+        </p>
+
+        <p><b>5. Professional Conduct</b><br />
+        Models must maintain professional behavior in all communications and assignments.<br />
+        Misconduct may lead to removal from the agency.
+        </p>
+
+        <p><b>6. Optional Services – Photo Submit, Portfolio & Coaching</b><br />
+        ZJELL may offer optional services like Photo Submission, Portfolio Review, and Coaching.
+        <br /><br />
+        These are add-on paid services subject to separate terms.
+        <br /><br />
+        Reports or coaching materials provided are confidential and cannot be reused, copied, or distributed without written permission.
+        </p>
+
+        <p><b>7. Legal Jurisdiction</b><br />
+        This agreement is governed by the laws of India, for users registered through MG Materials (India).
+        </p>
+
+        <p><b>8. Additional Questions / Consent</b></p>
+
+        <ul className="list-disc pl-6 space-y-1">
+          <li>Are you comfortable traveling for shoots?</li>
+          <li>Are you comfortable with camera/video shoots?</li>
+          <li>Do you have any tattoos or piercings? (If yes, specify)</li>
+          <li>Availability details may be requested when shortlisted.</li>
+          <li>Do you agree to follow agency rules and guidelines?</li>
+        </ul>
+
+        <p className="font-semibold mt-4">
+          ✅ DECLARATION
+        </p>
+
+        <p className="italic">
+          “I hereby declare that the information provided is true and I agree to the terms and conditions of the agency.”
+        </p>
+
+      </div>
+
+      <label className="flex items-center gap-2 mt-6">
+        <input
+          type="checkbox"
+          checked={agreed}
+          onChange={(e) => setAgreed(e.target.checked)}
+        />
+        <span>I Agree to Terms & Conditions</span>
+      </label>
+
+      <div className="flex gap-4 mt-6">
+        <button
+          onClick={() => {
+            setShowTerms(false)
+            setAgreed(false)
+          }}
+          className="flex-1 border border-gray-400 py-2 rounded"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={(e) => {
+            if (!agreed) {
+              return toast.error("Please agree to Terms & Conditions")
+            }
+
+            setShowTerms(false)
+            handleSubmit(e)
+          }}
+          className="flex-1 bg-black text-white py-2 rounded"
+        >
+          I Agree & Submit
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
+
     </div>
   )
 }
