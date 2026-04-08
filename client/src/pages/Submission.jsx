@@ -122,7 +122,7 @@ const Submission = () => {
       form.append("agreedToTerms", true)
 
       const xhr = new XMLHttpRequest()
-      xhr.open("POST", "http://localhost:5000/api/submission")
+      xhr.open("POST", "https://model-agency-1uat.onrender.com/api/submission")
 
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
