@@ -1,28 +1,32 @@
 import dotenv from "dotenv"
-dotenv.config()   // 👈 sabse upar
+dotenv.config()
 
 import express from "express"
 import cors from "cors"
 import contactRoutes from "./routes/contactRoutes.js"
 import submissionRoutes from "./routes/submissionRoutes.js"
 
-
 const app = express()
 
-// middleware
-app.use(cors())
+// Middleware
+app.use(cors({
+  origin: "https://model-agency-five.vercel.app",
+  credentials: true
+}))
+
 app.use(express.json())
 
-// routes
+// Routes
 app.use("/api", contactRoutes)
 app.use("/api", submissionRoutes)
 
-// test route
+// Health Check Route
 app.get("/", (req, res) => {
   res.send("Server running 🚀")
 })
 
-// server start
+// Start Server
+const PORT = process.env.PORT || 5000
 app.listen(5000, () => {
-  console.log("Server started on port 5000")
+  console.log(`Server started on port ${PORT}`)
 })
